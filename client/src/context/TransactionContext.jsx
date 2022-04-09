@@ -28,24 +28,30 @@ export const TransactionProvider = ({ children }) => {
 
     const getAllTransactions = async () => {
         try {
-            if(!ethereum) return alert("Please install Metamask");
+          if (ethereum) {
             const transactionsContract = getEthereumContract();
+    
             const availableTransactions = await transactionsContract.getAllTransactions();
+    
             const structuredTransactions = availableTransactions.map((transaction) => ({
-                addressTo: transaction.receiver,
-                addressFrom: transaction.sender,
-                timestamp: new Date(transaction.timestamp.toNumber() * 1000).toLocaleString(),
-                message: transaction.message,
-                keyword: transaction.keyword,
-                amount: parseInt(transaction.amount._hex) / (10 ** 18)
+              addressTo: transaction.receiver,
+              addressFrom: transaction.sender,
+              timestamp: new Date(transaction.timestamp.toNumber() * 1000).toLocaleString(),
+              message: transaction.message,
+              keyword: transaction.keyword,
+              amount: parseInt(transaction.amount._hex) / (10 ** 18)
             }));
+    
             console.log(structuredTransactions);
-
+    
             setTransactions(structuredTransactions);
+          } else {
+            console.log("Ethereum is not present");
+          }
         } catch (error) {
-            console.log(error);
+          console.log(error);
         }
-    }
+      };
 
     const checkIfWalletIsConnected = async () => {
         try {
@@ -69,17 +75,20 @@ export const TransactionProvider = ({ children }) => {
         
     };
 
-    const checkIfTransactionsExist = async () => {
+    const checkIfTransactionsExists = async () => {
         try {
+          if (ethereum) {
             const transactionsContract = getEthereumContract();
             const currentTransactionCount = await transactionsContract.getTransactionCount();
+    
             window.localStorage.setItem("transactionCount", currentTransactionCount);
+          }
         } catch (error) {
-            console.log(error);
-
-            throw new Error("No ethereum object!");
+          console.log(error);
+    
+          throw new Error("No ethereum object");
         }
-    }
+    };
 
     const connectWallet = async () => {
         try {
@@ -124,7 +133,7 @@ export const TransactionProvider = ({ children }) => {
             const transactionCount = await transactionContract.getTransactionCount();
 
             setTransactionCount(transactionCount.toNumber());
-            window.reload();
+            window.location.reload();
 
         } catch (error) {
             console.log(error);
@@ -135,7 +144,7 @@ export const TransactionProvider = ({ children }) => {
 
     useEffect(() => {
         checkIfWalletIsConnected();
-        checkIfTransactionsExist();
+        checkIfTransactionsExists();
     }, [transactionCount]);
     
     return (
